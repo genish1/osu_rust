@@ -1,9 +1,0 @@
-# Métadonnées
-title = Mon niveau2
-audio = level2.ogg
-bpm = 120
-
-# Objets
-circle | 400 | 300 | 1000
-circle | 200 | 150 | 2000
-slider | 600 | 400 | 3000 | 3500

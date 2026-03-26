@@ -1,4 +1,5 @@
 /// Le résultat d'un clic selon la précision du joueur.
+use bevy::prelude::*;
 #[derive(Debug, Clone, PartialEq)]
 pub enum HitResult {
     Hit300, // Parfait   — moins de 50ms d'écart
@@ -20,6 +21,7 @@ impl HitResult {
 }
 
 /// État complet d'une partie en cours.
+#[derive(Resource)]
 pub struct GameState {
     pub score: u32,
     pub combo: u32,
@@ -62,9 +64,9 @@ impl GameState {
     /// Évalue la précision d'un clic selon l'écart en ms avec le timing attendu.
     pub fn evaluate_timing(delta_ms: u64) -> HitResult {
         match delta_ms {
-            0..=50   => HitResult::Hit300,
-            51..=100  => HitResult::Hit100,
-            101..=150 => HitResult::Hit50,
+            0..=200   => HitResult::Hit300,
+            201..=400  => HitResult::Hit100,
+            401..=450 => HitResult::Hit50,
             _         => HitResult::Miss,
         }
     }

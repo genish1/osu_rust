@@ -87,8 +87,10 @@ fn parse_hit_object(line: &str) -> Option<HitObject> {
     match *kind {
         "circle" => Some(HitObject::Circle(Circle { x, y, time_ms })),
         "slider" => {
-            let end_time_ms = parts.get(4)?.parse::<u64>().ok()?;
-            Some(HitObject::Slider(Slider { x, y, time_ms, end_time_ms }))
+            let x_end       = parts.get(4)?.parse::<f32>().ok()?;
+            let y_end       = parts.get(5)?.parse::<f32>().ok()?;
+            let end_time_ms = parts.get(6)?.parse::<u64>().ok()?;
+            Some(HitObject::Slider(Slider { x, y, time_ms, x_end, y_end, end_time_ms }))
         }
         _ => None,
     }

@@ -19,7 +19,8 @@ pub struct Slider {
     pub x: f32,
     pub y: f32,
     pub time_ms: u64,
-    /// Moment où le slider se termine.
+    pub x_end: f32,
+    pub y_end: f32,
     pub end_time_ms: u64,
 }
 
