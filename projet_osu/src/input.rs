@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use crate::audio::MusicTimer;
 use crate::game::{GameState, HitResult};
-use crate::renderer::{ApproachRing, HitCircle, SliderStartCircle, SliderEndCircle, SliderBody};
+use crate::renderer::{ApproachRing, HitCircle, HitResultSprite, GameTextures, SliderStartCircle, SliderEndCircle, SliderBody};
 
 /// État d'un slider : le joueur a-t-il cliqué au bon moment sur le début ?
 #[derive(Component)]
@@ -14,6 +14,29 @@ pub struct SliderHitState {
     pub scored: bool,
 }
 
+/// Retourne le handle d'image correspondant au résultat.
+fn result_image(textures: &GameTextures, result: &HitResult) -> Handle<Image> {
+    match result {
+        HitResult::Hit300 => textures.hit_results[3].clone(),
+        HitResult::Hit100 => textures.hit_results[2].clone(),
+        HitResult::Hit50  => textures.hit_results[1].clone(),
+        HitResult::Miss   => textures.hit_results[0].clone(),
+    }
+}
+
+/// Spawne l'image de résultat à la position du cercle touché.
+fn spawn_hit_result(commands: &mut Commands, textures: &GameTextures, result: &HitResult, pos: Vec2) {
+    commands.spawn((
+        Sprite {
+            image: result_image(textures, result),
+            custom_size: Some(Vec2::splat(70.0)),
+            ..default()
+        },
+        Transform::from_xyz(pos.x, pos.y, 10.0),
+        HitResultSprite { timer: 0.8 },
+    ));
+}
+
 /// Système 1 — détecte le clic sur un HitCircle ou le début d'un slider.
 pub fn handle_click(
     mut commands: Commands,
@@ -22,6 +45,7 @@ pub fn handle_click(
     windows: Query<&Window>,
     mut game_state: ResMut<GameState>,
     timer: Res<MusicTimer>,
+    textures: Res<GameTextures>,
     circles: Query<(Entity, &HitCircle, &Transform)>,
     rings: Query<(Entity, &ApproachRing)>,
     slider_starts: Query<(Entity, &SliderStartCircle, &Transform)>,
@@ -54,11 +78,14 @@ pub fn handle_click(
 
     // --- HitCircles normaux ---
     for (entity, circle, transform) in circles.iter() {
+        // Ignorer les cercles pas encore apparus
+        if elapsed_ms < circle.time_ms.saturating_sub(1500) { continue; }
         let pos = transform.translation.truncate();
-        if (cursor_world - pos).length() < 35.0 {
+        if (cursor_world - pos).length() < 50.0 {
             let delta_ms = elapsed_ms.abs_diff(circle.time_ms);
             let result = GameState::evaluate_timing(delta_ms);
             println!("Circle hit ! delta={}ms → {:?}", delta_ms, result);
+            spawn_hit_result(&mut commands, &textures, &result, pos);
             game_state.register_hit(result);
             println!("Score : {} | Combo : {}", game_state.score, game_state.combo);
 
@@ -74,12 +101,13 @@ pub fn handle_click(
 
     // --- Cercle de début de slider ---
     for (entity, start, transform) in slider_starts.iter() {
+        // Ignorer les sliders pas encore apparus
+        if elapsed_ms < start.time_ms.saturating_sub(1500) { continue; }
         let pos = transform.translation.truncate();
-        if (cursor_world - pos).length() < 35.0 {
+        if (cursor_world - pos).length() < 50.0 {
             let delta_ms = elapsed_ms.abs_diff(start.time_ms);
             if delta_ms <= 450 {
                 println!("Slider démarré ! delta={}ms", delta_ms);
-                // On attache l'état sur l'entité du cercle de début
                 commands.entity(entity).insert(SliderHitState {
                     time_ms: start.time_ms,
                     end_time_ms: start.end_time_ms,
@@ -87,8 +115,8 @@ pub fn handle_click(
                     scored: false,
                 });
             } else {
-                // Clic trop en avance ou trop tard → Miss immédiat
                 println!("Slider manqué (hors fenêtre) → Miss");
+                spawn_hit_result(&mut commands, &textures, &HitResult::Miss, pos);
                 game_state.register_hit(HitResult::Miss);
             }
             return;
@@ -104,7 +132,8 @@ pub fn handle_slider_tick(
     keyboard: Res<ButtonInput<KeyCode>>,
     timer: Res<MusicTimer>,
     mut game_state: ResMut<GameState>,
-    mut slider_states: Query<(Entity, &mut SliderHitState, &SliderStartCircle)>,
+    textures: Res<GameTextures>,
+    mut slider_states: Query<(Entity, &mut SliderHitState, &SliderStartCircle, &Transform)>,
     slider_ends: Query<(Entity, &SliderEndCircle)>,
     slider_bodies: Query<(Entity, &SliderBody)>,
     rings: Query<(Entity, &ApproachRing)>,
@@ -115,7 +144,7 @@ pub fn handle_slider_tick(
         || keyboard.pressed(KeyCode::KeyX)
         || keyboard.pressed(KeyCode::KeyC);
 
-    for (entity, mut state, start) in slider_states.iter_mut() {
+    for (entity, mut state, start, transform) in slider_states.iter_mut() {
         if state.scored {
             continue;
         }
@@ -125,11 +154,14 @@ pub fn handle_slider_tick(
             continue;
         }
 
+        let pos = transform.translation.truncate();
         if held {
             println!("Slider réussi → Hit300");
+            spawn_hit_result(&mut commands, &textures, &HitResult::Hit300, pos);
             game_state.register_hit(HitResult::Hit300);
         } else {
             println!("Slider raté (non maintenu) → Miss");
+            spawn_hit_result(&mut commands, &textures, &HitResult::Miss, pos);
             game_state.register_hit(HitResult::Miss);
         }
         state.scored = true;

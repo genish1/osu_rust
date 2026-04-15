@@ -25,3 +25,13 @@ pub fn update_timer(
 ) {
     timer.0 += time.delta_secs();
 }
+
+/// Met en pause le sink audio actif.
+pub fn pause_music(sinks: Query<&AudioSink>) {
+    for sink in sinks.iter() { sink.pause(); }
+}
+
+/// Reprend la lecture du sink audio.
+pub fn resume_music(sinks: Query<&AudioSink>) {
+    for sink in sinks.iter() { sink.play(); }
+}
