@@ -2,10 +2,10 @@
 use bevy::prelude::*;
 #[derive(Debug, Clone, PartialEq)]
 pub enum HitResult {
-    Hit300, // Parfait   — moins de 50ms d'écart
-    Hit100, // Correct   — moins de 100ms d'écart
-    Hit50,  // Raté de peu — moins de 150ms d'écart
-    Miss,   // Raté
+    Hit300, // ≤200ms
+    Hit100, // 201–400ms
+    Hit50,  // 401–450ms
+    Miss,
 }
 
 impl HitResult {
@@ -77,8 +77,7 @@ impl GameState {
         }
     }
 
-    /// Score maximal atteignable si tous les objets sont frappés en Hit300 sans casser le combo.
-    /// = 300 × (1 + 2 + ... + n) = 300 × n × (n+1) / 2
+    // 300 * (1 + 2 + ... + n) = 300 * n*(n+1)/2
     pub fn max_possible_score(&self) -> u64 {
         let n = self.total_objects as u64;
         300 * n * (n + 1) / 2
@@ -88,7 +87,6 @@ impl GameState {
     pub fn grade(&self) -> &'static str {
         let max = self.max_possible_score();
         if max == 0 { return "D"; }
-        // S : score parfait (toutes les notes en Hit300, combo jamais cassé)
         if self.score as u64 == max { return "S"; }
         let ratio = self.score as f64 / max as f64;
         if ratio >= 0.80 { "A" }

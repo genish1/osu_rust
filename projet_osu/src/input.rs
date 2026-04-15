@@ -124,8 +124,7 @@ pub fn handle_click(
     }
 }
 
-/// Système 2 — évalue les sliders à la fin de leur durée.
-/// Critère unique : le bouton est-il encore maintenu à end_time_ms ?
+/// Évalue les sliders à la fin de leur durée.
 pub fn handle_slider_tick(
     mut commands: Commands,
     mouse: Res<ButtonInput<MouseButton>>,

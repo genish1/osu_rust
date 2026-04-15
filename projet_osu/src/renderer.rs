@@ -71,16 +71,12 @@ pub fn setup(
 ) {
     commands.spawn(Camera2d);
 
-    // Mutation directe du composant (pas de commande différée) pour que
-    // le système changed_cursor_options de bevy_winit détecte le changement
-    // dans le même frame et appelle set_cursor_visible(false) sur le vrai OS.
     if let Ok(mut c) = cursor_options.single_mut() {
         c.visible = false;
     }
 
     let cursor_handle: Handle<Image> = asset_server.load("cursor.png");
 
-    // Curseur custom en tant qu'élément UI (toujours au-dessus des nodes UI plein-écran)
     commands.spawn((
         Node {
             position_type: PositionType::Absolute,
@@ -178,7 +174,6 @@ pub fn spawn_circles(
                     HitCircle { time_ms: circle.time_ms },
                 )).id();
 
-                // Chiffre par-dessus le cercle (enfant → suit automatiquement)
                 let number_entity = commands.spawn((
                     Sprite {
                         image: textures.numbers[digit].clone(),

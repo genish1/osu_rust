@@ -1,5 +1,4 @@
-/// Un objet à frapper — soit un cercle, soit un slider.
-/// On utilise une enum car un objet est TOUJOURS l'un OU l'autre.
+/// Un objet à frapper — cercle ou slider.
 #[derive(Debug, Clone)]
 pub enum HitObject {
     Circle(Circle),
