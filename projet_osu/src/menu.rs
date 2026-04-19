@@ -424,7 +424,7 @@ pub fn setup_result_screen(
     )).with_children(|p| {
         // Titre
         p.spawn((
-            Text::new("Résultats"),
+            Text::new("Resultats"),
             TextFont { font_size: 64.0, ..default() },
             TextColor(Color::srgb(0.7, 0.7, 0.9)),
         ));
